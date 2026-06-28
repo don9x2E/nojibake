@@ -57,14 +57,9 @@ function powershellCommand() {
   return null;
 }
 
-function quoteCmdArg(arg) {
-  return `"${arg.replace(/"/g, '""')}"`;
-}
-
 function runInstalledBin(bin, args, options = {}) {
   if (process.platform !== 'win32') return run(bin, args, options);
-  const commandLine = [bin, ...args].map(quoteCmdArg).join(' ');
-  return run('cmd.exe', ['/d', '/s', '/c', commandLine], options);
+  return run('cmd.exe', ['/d', '/c', 'call', bin, ...args], options);
 }
 
 try {
