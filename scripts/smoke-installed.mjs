@@ -57,6 +57,16 @@ function powershellCommand() {
   return null;
 }
 
+function quoteCmdArg(arg) {
+  return `"${arg.replace(/"/g, '""')}"`;
+}
+
+function runInstalledBin(bin, args, options = {}) {
+  if (process.platform !== 'win32') return run(bin, args, options);
+  const commandLine = [bin, ...args].map(quoteCmdArg).join(' ');
+  return run('cmd.exe', ['/d', '/s', '/c', commandLine], options);
+}
+
 try {
   mkdirSync(consumerRoot, { recursive: true });
   const packOutput = run(npmCommand('npm'), ['pack', '--silent'], { cwd: projectRoot, shell: process.platform === 'win32' });
@@ -70,11 +80,10 @@ try {
 
   const binDir = join(consumerRoot, 'node_modules', '.bin');
   const bin = process.platform === 'win32' ? join(binDir, 'nojibake.cmd') : join(binDir, 'nojibake');
-  assertOkJson(run(bin, ['version', '--json'], { cwd: consumerRoot, shell: process.platform === 'win32' }), 'version');
-  assertOkJson(run(bin, ['scan', '--root', consumerRoot, '--stdin-paths', '--json', '--compact'], {
+  assertOkJson(runInstalledBin(bin, ['version', '--json'], { cwd: consumerRoot }), 'version');
+  assertOkJson(runInstalledBin(bin, ['scan', '--root', consumerRoot, '--stdin-paths', '--json', '--compact'], {
     cwd: consumerRoot,
-    input: 'package.json\r\n한글 파일.txt\r\n',
-    shell: process.platform === 'win32'
+    input: 'package.json\r\n한글 파일.txt\r\n'
   }), 'scan');
 
   assertOkJson(run(npmCommand('npx'), ['--no-install', 'nojibake', 'version', '--json'], { cwd: consumerRoot, shell: process.platform === 'win32' }), 'version');

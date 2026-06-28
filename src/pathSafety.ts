@@ -34,6 +34,18 @@ function linkedComponent(path: string): string | null {
   return null;
 }
 
+function linkedDescendant(path: string, root: string): string | null {
+  const rel = relative(root, path);
+  if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) return null;
+
+  let current = root;
+  for (const part of rel.split(/[\\/]+/).filter((entry) => entry.length > 0)) {
+    current = resolve(current, part);
+    if (lstatSync(current).isSymbolicLink()) return current;
+  }
+  return null;
+}
+
 export function resolveSafePath(inputPath: string, root?: string): SafePathResult {
   const resolvedRoot = root === undefined ? null : resolve(root);
   const base = resolvedRoot ?? process.cwd();
@@ -46,9 +58,8 @@ export function resolveSafePath(inputPath: string, root?: string): SafePathResul
 
   if (resolvedRoot !== null) {
     try {
-      const rootLink = linkedComponent(resolvedRoot);
-      if (rootLink !== null) {
-        errors.push(makeError('NOJIBAKE_ROOT_LINK_REJECTED', 'Symlink or reparse root is rejected for MVP safety.', { root: rootLink }));
+      if (lstatSync(resolvedRoot).isSymbolicLink()) {
+        errors.push(makeError('NOJIBAKE_ROOT_LINK_REJECTED', 'Symlink or reparse root is rejected for MVP safety.', { root: resolvedRoot }));
         return { ok: false, path: resolvedPath, root: resolvedRoot, errors };
       }
     } catch {
@@ -70,7 +81,7 @@ export function resolveSafePath(inputPath: string, root?: string): SafePathResul
     return { ok: false, path: resolvedPath, root: resolvedRoot, errors };
   }
 
-  const pathLink = linkedComponent(resolvedPath);
+  const pathLink = resolvedRoot === null ? linkedComponent(resolvedPath) : linkedDescendant(resolvedPath, resolvedRoot);
   if (pathLink !== null) {
     errors.push(makeError('NOJIBAKE_PATH_LINK_REJECTED', 'Symlink or reparse traversal is rejected for MVP safety.', { path: pathLink }));
     return { ok: false, path: resolvedPath, root: resolvedRoot, errors };
