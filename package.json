@@ -1,0 +1,61 @@
+{
+  "name": "nojibake",
+  "version": "0.1.0",
+  "description": "Read-only CLI for detecting text encoding and mojibake risk signals.",
+  "type": "module",
+  "bin": {
+    "nojibake": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run",
+    "coverage": "npm run build && vitest run --coverage",
+    "smoke": "node dist/cli.js version --json && node dist/cli.js schema result --json && node dist/cli.js scan --root src --path cli.ts --json --compact && node dist/cli.js guard --root src --path cli.ts --json --compact",
+    "smoke:windows": "node scripts/smoke-windows.mjs",
+    "smoke:installed": "node scripts/smoke-installed.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "keywords": [
+    "encoding",
+    "cli",
+    "unicode",
+    "mojibake",
+    "charset",
+    "agent",
+    "preflight"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/don9x2E/nojibake.git"
+  },
+  "bugs": {
+    "url": "https://github.com/don9x2E/nojibake/issues"
+  },
+  "homepage": "https://github.com/don9x2E/nojibake#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "iconv-lite": "^0.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.15",
+    "@vitest/coverage-v8": "^4.1.9",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
+  }
+}

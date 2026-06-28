@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+npm-debug.log*
+.DS_Store
+tests/fixtures/
+tests/path-fixtures/
+tests/cli-fixtures/
+tests/config-fixtures/
+tests/windows-fixtures/
+tests/read-only-fixtures/
+win-fixtures/

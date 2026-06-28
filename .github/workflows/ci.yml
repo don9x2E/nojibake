@@ -1,0 +1,58 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [20.x, 22.x]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run smoke
+      - run: npm run smoke:windows
+      - run: npm run pack:check
+      - run: npm run smoke:installed
+
+  windows-shells:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: PowerShell stdin and CJK path smoke
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force win-fixtures | Out-Null
+          Set-Content -Path "win-fixtures/한글 파일.txt" -Value "한글" -Encoding utf8
+          "한글 파일.txt" | node dist/cli.js scan --root win-fixtures --stdin-paths --json --compact
+          node dist/cli.js inspect path --root win-fixtures --path "한글 파일.txt" --json --compact
+      - name: CMD stdin and CJK path smoke
+        shell: cmd
+        run: |
+          chcp 65001
+          if not exist win-fixtures mkdir win-fixtures
+          echo 한글> "win-fixtures\cmd-한글.txt"
+          echo cmd-한글.txt| node dist\cli.js scan --root win-fixtures --stdin-paths --json --compact
+          node dist\cli.js inspect path --root win-fixtures --path "cmd-한글.txt" --json --compact
