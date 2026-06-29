@@ -4,7 +4,7 @@
   "description": "Read-only CLI for detecting text encoding and mojibake risk signals.",
   "type": "module",
   "bin": {
-    "nojibake": "./dist/cli.js"
+    "nojibake": "dist/cli.js"
   },
   "files": [
     "dist",
