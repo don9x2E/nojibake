@@ -249,24 +249,30 @@ export function analyzeBytes(bytes: Buffer): EncodingDecision {
   };
 }
 
-export function buildInspectData(input: { path: string; root: string | null; bytes: Buffer }): InspectData {
+export function inspectBytes(input: { path: string; root: string | null; bytes: Buffer }): {
+  data: InspectData;
+  errors: ResultError[];
+} {
   const analysis = analyzeBytes(input.bytes);
   return {
-    path: input.path,
-    root: input.root,
-    length: input.bytes.length,
-    sha256: sha256(input.bytes),
-    bom: analysis.bom,
-    encoding: analysis.encoding,
-    decision: analysis.decision,
-    asciiCompatible: analysis.asciiCompatible,
-    eol: analysis.eol,
-    safeRead: analysis.safeRead,
-    safeRewrite: false,
-    candidates: analysis.candidates
+    data: {
+      path: input.path,
+      root: input.root,
+      length: input.bytes.length,
+      sha256: sha256(input.bytes),
+      bom: analysis.bom,
+      encoding: analysis.encoding,
+      decision: analysis.decision,
+      asciiCompatible: analysis.asciiCompatible,
+      eol: analysis.eol,
+      safeRead: analysis.safeRead,
+      safeRewrite: false,
+      candidates: analysis.candidates
+    },
+    errors: analysis.errors
   };
 }
 
-export function encodingErrors(bytes: Buffer): ResultError[] {
-  return analyzeBytes(bytes).errors;
+export function buildInspectData(input: { path: string; root: string | null; bytes: Buffer }): InspectData {
+  return inspectBytes(input).data;
 }

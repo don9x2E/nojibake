@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
-import { buildInspectData, encodingErrors } from './encoding.js';
+import { inspectBytes } from './encoding.js';
 import { resolveSafePath } from './pathSafety.js';
 import { makeError } from './result.js';
 import type { GuardData, GuardFailureData, GuardPolicy, ReasonCode, ScanData, ScanFileData, ScanSkippedData, ScanSummaryData } from './types.js';
@@ -243,8 +243,7 @@ function inspectOne(root: string, inputPath: string, options: { maxBytes?: numbe
     }, options.allowEncodings);
   }
 
-  const data = buildInspectData({ path: safe.path, root: safe.root, bytes });
-  const errors = encodingErrors(bytes);
+  const { data, errors } = inspectBytes({ path: safe.path, root: safe.root, bytes });
   return withReasons({
     path: displayPath,
     ok: errors.length === 0,
