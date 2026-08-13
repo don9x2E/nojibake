@@ -10,4 +10,5 @@ tests/cli-fixtures/
 tests/config-fixtures/
 tests/windows-fixtures/
 tests/read-only-fixtures/
+tests/unlimited-fixtures/
 win-fixtures/

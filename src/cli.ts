@@ -7,7 +7,7 @@ import { buildInspectData, encodingErrors } from './encoding.js';
 import { compactGuardData, compactInspectData, compactScanData, formatGuardLines, formatInspectLine, formatScanLines } from './format.js';
 import { resolveSafePath } from './pathSafety.js';
 import { envelope, packageInfo } from './result.js';
-import { guardScan, parseGuardPolicies, parsePositiveInteger, scanPaths, type ScanOptions } from './scan.js';
+import { guardScan, parseGuardPolicies, parseMaxBytes, parsePositiveInteger, scanPaths, type ScanOptions } from './scan.js';
 import { resultSchema } from './schema.js';
 import type { InspectData, VersionData } from './types.js';
 
@@ -87,7 +87,7 @@ function mergeStrings(configValues: string[] | undefined, cliValues: string[] | 
 }
 
 function applyNumberOption(target: ScanOptions, key: 'maxFiles' | 'maxBytes', cliValue: string | undefined, configValue: number | undefined): void {
-  const parsed = parsePositiveInteger(cliValue);
+  const parsed = key === 'maxBytes' ? parseMaxBytes(cliValue) : parsePositiveInteger(cliValue);
   const value = parsed ?? configValue;
   if (value !== undefined) target[key] = value;
 }
@@ -246,7 +246,7 @@ export function createProgram(): Command {
     .option('--path <file>', 'specific file to scan; can be repeated', collectPath, [] as string[])
     .option('--stdin-paths', 'read newline-separated paths from stdin')
     .option('--max-files <n>', 'maximum files for recursive scan')
-    .option('--max-bytes <n>', 'maximum bytes to read per file')
+    .option('--max-bytes <n>', 'maximum bytes to read per file; 0 disables the 1 MiB default')
     .option('--include-ignored', 'include default ignored directories such as node_modules and dist')
     .option('--ignore <pattern>', 'ignore pattern; can be repeated', collectPath, [] as string[])
     .option('--allow-encoding <encoding>', 'allowed encoding; can be repeated', collectPath, [] as string[])
@@ -261,7 +261,7 @@ export function createProgram(): Command {
     .option('--path <file>', 'specific file to guard; can be repeated', collectPath, [] as string[])
     .option('--stdin-paths', 'read newline-separated paths from stdin')
     .option('--max-files <n>', 'maximum files for recursive scan')
-    .option('--max-bytes <n>', 'maximum bytes to read per file')
+    .option('--max-bytes <n>', 'maximum bytes to read per file; 0 disables the 1 MiB default')
     .option('--include-ignored', 'include default ignored directories such as node_modules and dist')
     .option('--ignore <pattern>', 'ignore pattern; can be repeated', collectPath, [] as string[])
     .option('--allow-encoding <encoding>', 'allowed encoding; can be repeated', collectPath, [] as string[])

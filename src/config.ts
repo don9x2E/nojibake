@@ -25,6 +25,14 @@ function parsePositiveInteger(value: unknown, key: string): number | undefined {
   return value;
 }
 
+function parseMaxBytes(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error('maxBytes must be a non-negative integer.');
+  }
+  return value;
+}
+
 function parseBoolean(value: unknown, key: string): boolean | undefined {
   if (value === undefined) return undefined;
   if (typeof value !== 'boolean') throw new Error(`${key} must be a boolean.`);
@@ -65,7 +73,7 @@ export function parseConfigText(text: string, source: string): NojibakeConfig {
   const config: NojibakeConfig = {};
   const maxFiles = parsePositiveInteger(parsed.maxFiles, 'maxFiles');
   if (maxFiles !== undefined) config.maxFiles = maxFiles;
-  const maxBytes = parsePositiveInteger(parsed.maxBytes, 'maxBytes');
+  const maxBytes = parseMaxBytes(parsed.maxBytes);
   if (maxBytes !== undefined) config.maxBytes = maxBytes;
   const includeIgnored = parseBoolean(parsed.includeIgnored, 'includeIgnored');
   if (includeIgnored !== undefined) config.includeIgnored = includeIgnored;
