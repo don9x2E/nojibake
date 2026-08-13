@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Inspect and scan now analyze file bytes once instead of running the encoding pipeline twice.
+
 ## 0.1.0
 
 - Initial read-only encoding inspection CLI.

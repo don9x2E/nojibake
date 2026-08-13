@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import iconv from 'iconv-lite';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { analyzeBytes, buildInspectData, sha256 } from '../src/encoding.js';
+import { analyzeBytes, buildInspectData, inspectBytes, sha256 } from '../src/encoding.js';
 
 const fixtureRoot = join(process.cwd(), 'tests', 'fixtures');
 
@@ -91,5 +91,14 @@ describe('encoding analysis', () => {
     const data = buildInspectData({ path: fixture('ascii.txt'), root: fixtureRoot, bytes });
     expect(data.sha256).toBe(sha256(bytes));
     expect(data.safeRewrite).toBe(false);
+  });
+
+  it('returns inspection data and encoding errors from a single analysis', () => {
+    const bytes = readFileSync(fixture('binary-nul.bin'));
+    const { data, errors } = inspectBytes({ path: fixture('binary-nul.bin'), root: fixtureRoot, bytes });
+    expect(data.decision).toBe('binary');
+    expect(data.safeRead).toBe(false);
+    expect(data.sha256).toBe(sha256(bytes));
+    expect(errors).toEqual([expect.objectContaining({ code: 'NOJIBAKE_BINARY_NUL' })]);
   });
 });

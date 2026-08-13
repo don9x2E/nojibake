@@ -3,7 +3,7 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { loadConfig, type NojibakeConfig } from './config.js';
-import { buildInspectData, encodingErrors } from './encoding.js';
+import { inspectBytes } from './encoding.js';
 import { compactGuardData, compactInspectData, compactScanData, formatGuardLines, formatInspectLine, formatScanLines } from './format.js';
 import { resolveSafePath } from './pathSafety.js';
 import { envelope, packageInfo } from './result.js';
@@ -224,8 +224,7 @@ export function createProgram(): Command {
         process.exitCode = 2;
         return;
       }
-      const data = buildInspectData({ path: safe.path, root: safe.root, bytes });
-      const errors = encodingErrors(bytes);
+      const { data, errors } = inspectBytes({ path: safe.path, root: safe.root, bytes });
       if (output === 'pretty') {
         writeLines([formatInspectLine(data, errors)]);
       } else {
