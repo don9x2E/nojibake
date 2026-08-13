@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Inspect and scan now analyze file bytes once instead of running the encoding pipeline twice.
+- `scan` and `guard` now skip files larger than 1 MiB by default. Pass `--max-bytes 0` or set `"maxBytes": 0` in `.nojibakerc.json` to read files of any size. `inspect path` still reads the named file.
 
 ## 0.1.0
 

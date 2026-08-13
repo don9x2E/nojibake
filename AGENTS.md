@@ -66,7 +66,7 @@ Use recursive scan when you need a broad inventory:
 nojibake scan --root . --json --compact
 ```
 
-The recursive scan skips `.git`, `node_modules`, `dist`, and `coverage` by default. Do not pass `--include-ignored` unless you intentionally want generated or vendored files.
+The recursive scan skips `.git`, `node_modules`, `dist`, and `coverage` by default. Do not pass `--include-ignored` unless you intentionally want generated or vendored files. `scan` and `guard` skip files larger than 1 MiB by default; pass `--max-bytes 0` to read files of any size.
 
 ## Editing rules
 

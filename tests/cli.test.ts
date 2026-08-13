@@ -2,10 +2,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { defaultMaxBytes } from '../src/scan.js';
 
 const cli = join(process.cwd(), 'dist', 'cli.js');
 const root = join(process.cwd(), 'tests', 'cli-fixtures');
 const configRoot = join(process.cwd(), 'tests', 'config-fixtures');
+const unlimitedRoot = join(process.cwd(), 'tests', 'unlimited-fixtures');
+const oversizedLength = defaultMaxBytes + 1;
 
 function runCli(args: string[]): unknown {
   const output = execFileSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
@@ -23,6 +26,7 @@ beforeAll(() => {
   writeFileSync(join(root, 'sample.txt'), 'hello\n');
   writeFileSync(join(root, 'binary.bin'), Buffer.from([0x61, 0x00, 0x62]));
   writeFileSync(join(root, 'mixed-eol.txt'), 'a\r\nb\nc\rd');
+  writeFileSync(join(root, 'oversized.bin'), Buffer.alloc(oversizedLength, 0x61));
 
   rmSync(configRoot, { recursive: true, force: true });
   mkdirSync(join(configRoot, 'ignored'), { recursive: true });
@@ -35,6 +39,11 @@ beforeAll(() => {
   writeFileSync(join(configRoot, 'cp949.txt'), Buffer.from([0xb0, 0xa1, 0x0a]));
   writeFileSync(join(configRoot, 'big.txt'), '0123456789');
   writeFileSync(join(configRoot, 'ignored', 'skip.txt'), 'skip\n');
+
+  rmSync(unlimitedRoot, { recursive: true, force: true });
+  mkdirSync(unlimitedRoot, { recursive: true });
+  writeFileSync(join(unlimitedRoot, '.nojibakerc.json'), JSON.stringify({ maxBytes: 0 }, null, 2));
+  writeFileSync(join(unlimitedRoot, 'oversized.bin'), Buffer.alloc(oversizedLength, 0x61));
 });
 
 describe('CLI JSON behavior', () => {
@@ -110,6 +119,39 @@ describe('CLI JSON behavior', () => {
     const result = runCliResult(['guard', '--root', configRoot, '--path', 'big.txt', '--fail-on', 'unsafe', '--json', '--compact']);
     expect(result.status).toBe(1);
     expect(result.json).toMatchObject({ ok: false, data: { fail: [{ p: 'big.txt', pol: ['unsafe'], why: ['large:file', 'read:unsafe'] }] } });
+  });
+
+  it('skips files larger than the default maxBytes without reading them', () => {
+    const result = runCliResult(['guard', '--root', root, '--path', 'oversized.bin', '--fail-on', 'unsafe', '--json', '--compact']);
+    expect(result.status).toBe(1);
+    expect(result.json).toMatchObject({
+      ok: false,
+      data: { fail: [{ p: 'oversized.bin', pol: ['unsafe'], why: ['large:file', 'read:unsafe'] }] }
+    });
+  });
+
+  it('reads oversized files when --max-bytes is 0', () => {
+    const result = runCliResult(['scan', '--root', root, '--path', 'oversized.bin', '--max-bytes', '0', '--json', '--compact']);
+    expect(result.status).toBe(0);
+    expect(result.json).toMatchObject({
+      ok: true,
+      data: { s: { n: 1, safe: 1 }, f: [{ p: 'oversized.bin', l: oversizedLength, e: 'ascii', d: 'ascii', sr: true }] }
+    });
+  });
+
+  it('reads oversized files when config maxBytes is 0', () => {
+    const result = runCliResult(['scan', '--root', unlimitedRoot, '--path', 'oversized.bin', '--json', '--compact']);
+    expect(result.status).toBe(0);
+    expect(result.json).toMatchObject({
+      ok: true,
+      data: { s: { n: 1, safe: 1 }, f: [{ p: 'oversized.bin', l: oversizedLength, e: 'ascii', sr: true }] }
+    });
+  });
+
+  it('inspect path still reads files larger than the scan maxBytes default', () => {
+    const result = runCli(['inspect', 'path', '--root', root, '--path', 'oversized.bin', '--json', '--compact']) as { ok: boolean; data: { p: string; l: number; sr: boolean } };
+    expect(result.ok).toBe(true);
+    expect(result.data).toMatchObject({ p: 'oversized.bin', l: oversizedLength, sr: true });
   });
 
   it('emits pretty scan output for humans', () => {

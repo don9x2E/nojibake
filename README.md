@@ -50,7 +50,7 @@ git diff --cached --name-only | nojibake guard --root . --stdin-paths --fail-on 
 nojibake guard --root . --fail-on unsafe,ambiguous,mixed-eol,disallowed-encoding --json --compact
 ```
 
-`scan` recursively scans a root directory unless one or more `--path` options are supplied or `--stdin-paths` is used. Recursive scans skip `.git`, `node_modules`, `dist`, and `coverage` by default; pass `--include-ignored` to include them. Use `--max-files <n>` to bound large repositories and `--max-bytes <n>` to avoid reading oversized files.
+`scan` recursively scans a root directory unless one or more `--path` options are supplied or `--stdin-paths` is used. Recursive scans skip `.git`, `node_modules`, `dist`, and `coverage` by default; pass `--include-ignored` to include them. `scan` and `guard` skip files larger than 1,048,576 bytes (1 MiB) by default and stop recursive walks at 5,000 files. Use `--max-files <n>` and `--max-bytes <n>` to change those bounds, or pass `--max-bytes 0` (or `"maxBytes": 0` in `.nojibakerc.json`) to read files of any size. `inspect path` always reads the named file.
 
 `--stdin-paths` reads newline-separated paths from stdin. This gives you `scan --changed` behavior without letting Nojibake execute `git` or any child process.
 
@@ -249,7 +249,7 @@ git diff --cached --name-only | nojibake guard --root . --stdin-paths --fail-on 
 nojibake guard --root . --fail-on unsafe,ambiguous,mixed-eol,disallowed-encoding --json --compact
 ```
 
-`scan`은 지정한 root 아래를 재귀적으로 스캔합니다. `--path`를 하나 이상 넘기거나 `--stdin-paths`를 쓰면 해당 파일 목록만 검사합니다. 기본적으로 `.git`, `node_modules`, `dist`, `coverage`는 건너뜁니다.
+`scan`은 지정한 root 아래를 재귀적으로 스캔합니다. `--path`를 하나 이상 넘기거나 `--stdin-paths`를 쓰면 해당 파일 목록만 검사합니다. 기본적으로 `.git`, `node_modules`, `dist`, `coverage`는 건너뜁니다. `scan`과 `guard`는 파일이 1,048,576바이트(1 MiB)를 넘으면 읽지 않고, 재귀 스캔은 5,000개에서 멈춥니다. `--max-files <n>`, `--max-bytes <n>`으로 한도를 바꿀 수 있고, `--max-bytes 0` 또는 `.nojibakerc.json`의 `"maxBytes": 0`이면 크기 제한 없이 읽습니다. `inspect path`는 지정한 파일을 항상 읽습니다.
 
 `--stdin-paths`는 stdin에서 newline-separated path 목록을 읽습니다. Nojibake가 직접 `git`이나 child process를 실행하지 않아도 `git diff --name-only` 결과를 안전하게 연결할 수 있습니다.
 

@@ -8,6 +8,9 @@ import type { GuardData, GuardFailureData, GuardPolicy, ReasonCode, ScanData, Sc
 const defaultIgnoredDirs = new Set(['.git', 'node_modules', 'dist', 'coverage']);
 const allowedPolicies = new Set<GuardPolicy>(['unsafe', 'ambiguous', 'mixed-eol', 'non-utf8', 'disallowed-encoding']);
 
+export const defaultMaxFiles = 5000;
+export const defaultMaxBytes = 1_048_576;
+
 export interface ScanOptions {
   root?: string;
   paths?: string[];
@@ -272,8 +275,21 @@ export function parsePositiveInteger(value: string | undefined): number | undefi
   return parsed;
 }
 
-export function parseMaxFiles(value: string | undefined, fallback = 5000): number {
+export function parseMaxBytes(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return undefined;
+  return parsed;
+}
+
+export function parseMaxFiles(value: string | undefined, fallback = defaultMaxFiles): number {
   return parsePositiveInteger(value) ?? fallback;
+}
+
+export function resolveMaxBytes(value: number | undefined): number | undefined {
+  if (value === 0) return undefined;
+  if (value !== undefined) return value;
+  return defaultMaxBytes;
 }
 
 export function scanPaths(options: ScanOptions = {}): ScanData {
@@ -294,10 +310,11 @@ export function scanPaths(options: ScanOptions = {}): ScanData {
   const useExplicitPaths = options.useExplicitPaths === true || activeInputPaths.length > 0;
   const collected = useExplicitPaths
     ? { paths: activeInputPaths, skipped: skippedInputs }
-    : collectRecursive(root, options.maxFiles ?? 5000, options.includeIgnored === true, ignore);
+    : collectRecursive(root, options.maxFiles ?? defaultMaxFiles, options.includeIgnored === true, ignore);
   const allowEncodings = options.allowEncodings === undefined ? null : new Set(options.allowEncodings.map((encoding) => encoding.toLowerCase()));
   const inspectOptions: { maxBytes?: number; allowEncodings: Set<string> | null } = { allowEncodings };
-  if (options.maxBytes !== undefined) inspectOptions.maxBytes = options.maxBytes;
+  const maxBytes = resolveMaxBytes(options.maxBytes);
+  if (maxBytes !== undefined) inspectOptions.maxBytes = maxBytes;
   const files = collected.paths.map((path) => inspectOne(root, path, inspectOptions));
   return { root: portable(root), files, skipped: collected.skipped, summary: summarize(files, collected.skipped) };
 }
