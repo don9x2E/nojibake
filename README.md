@@ -13,7 +13,7 @@ Nojibake does not modify files. It is a read-only preflight guard for agents and
 Run the published CLI directly:
 
 ```sh
-npx -y nojibake@0.1.0 version --json
+npx -y nojibake@0.1.1 version --json
 ```
 
 Or install it globally:
@@ -149,11 +149,11 @@ JSON commands emit a JSON-first result envelope:
 ```json
 {
   "schemaVersion": "1.0.0",
-  "toolVersion": "0.1.0",
+  "toolVersion": "0.1.1",
   "invocationId": "00000000-0000-0000-0000-000000000000",
   "ok": true,
   "command": "version",
-  "summary": "Nojibake 0.1.0",
+  "summary": "Nojibake 0.1.1",
   "data": {},
   "errors": [],
   "warnings": []
@@ -212,7 +212,7 @@ Nojibake는 파일을 수정하지 않습니다. 자동 인코딩 변환기가 �
 공개된 CLI는 바로 실행할 수 있습니다.
 
 ```sh
-npx -y nojibake@0.1.0 version --json
+npx -y nojibake@0.1.1 version --json
 ```
 
 전역 설치도 가능합니다.
